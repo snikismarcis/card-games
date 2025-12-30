@@ -6,4 +6,4 @@ Project for creating card games using java
 
 - Make many card games playable virtually, using java logic
 - Create appealing interface for UX using JavaFX or HTML and CSS
-- Develop online playability 
+- Develop online playability
