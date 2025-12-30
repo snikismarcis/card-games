@@ -9,43 +9,36 @@ public class Scoundrel {
    private static int weaponMonster = 0;
    private static boolean weaponFlag = false;
 
+   private static ArrayList<Card> roomCards = new ArrayList<>(4);
+
    private static ArrayList<Card> newScoundrelDeck() {
       ArrayList<Card> deck = Card.createShuffledDeck();
       ArrayList<Card> deckScoundrel = new ArrayList<>();
-      for (int i=0; i<deck.size(); i++) {
-         if ((deck.get(i).getSuit().toString() == "DIAMONDS" || deck.get(i).getSuit().toString() == "HEARTS") && deck.get(i).getRank().getValue() > 10) {
+
+      for (Card c : deck) {
+         String suit = c.getSuit().toString();
+         int value = c.getRank().getValue();
+
+         if ((suit.equals("DIAMONDS") || suit.equals("HEARTS")) && value > 10) {
+            continue;
          }
-         else {
-            deckScoundrel.add(deck.get(i));
-         }
+         deckScoundrel.add(c);
       }
       
       return deckScoundrel;
    }
 
-   private static String room(Card card1, Card card2, Card card3, Card card4) {
-      String cardFace1 = card1.toString();
-      String cardFace2 = card2.toString();
-      String cardFace3 = card3.toString();
-      String cardFace4 = card4.toString();
-
-      String room = "Card1: " + cardFace1 + " Card2: " + cardFace2 + " Card3: " + cardFace3 + " Card4: " + cardFace4;
-      return room;
-   }
-
-   private static String getCardSuit(Card card) {
-      return card.getSuit().toString();
-   }
-
    private static int weaponSlain(int v) {
-      if (v > weaponMonster) return v;
-      else return v-weapon;
+      return (v > weaponMonster) ? v : (v-weapon);
    }
 
-   private static void gameLogic(Card card, String suit, int value) {
-      if (suit == "SPADES" || suit == "CLUBS") {
+   private static void gameLogic(Card card) {
+      String suit = card.getSuit().toString();
+      int value = card.getRank().getValue();
+
+      if (suit.equals("SPADES") || suit.equals("CLUBS")) {
          if (weapon == 0) {
-            health = health - value;
+            health -= value;
          }
          else {
             if (weaponFlag != true) {
@@ -62,85 +55,93 @@ public class Scoundrel {
          }
       }
 
-      if (suit == "HEARTS") {
-         health = health + value;
+      if (suit.equals("HEARTS")) {
+         health += value;
          System.out.println(health);
       }
-      if (suit == "DIAMONDS") {
+      if (suit.equals("DIAMONDS")) {
          weapon = value;
          weaponFlag = false;
          System.out.println("New weapon: " + weapon + " of DIAMONDS");
       }
    }
 
+   private static void gameRoom(ArrayList<Card> deck) {
+      ArrayList<Card> survivors = new ArrayList<>();
+
+      for (Card c : roomCards) {
+         if (c != null) survivors.add(c);
+      }
+
+      roomCards.clear();
+      roomCards.addAll(survivors);
+
+      while (roomCards.size() < 4 && !deck.isEmpty()) {
+         roomCards.add(deck.remove(0));
+      }
+
+   }
+
+   private static void printRoom() {
+      for (int i=0; i<4; i++) {
+         System.out.println((i + 1) + ": ");
+         if (i < roomCards.size() && roomCards.get(i) != null) {
+            System.out.println(roomCards.get(i));
+         } else {
+            System.out.println("[USED]");
+         }
+      }
+   }
+
    public static void main(String[] args) {
       ArrayList<Card> deck = newScoundrelDeck();
       Scanner sc = new Scanner(System.in);
-    
-      // System.out.println("Test: ");
-      // for (int i = 0; i < deck.size(); i++) {
-      //    System.out.println(deck.get(i));
-      // }
+
       short round = 1;
 
       boolean skipFlag = false;
 
-      while (!deck.isEmpty()) {
+      while (health > 0 && !deck.isEmpty()) {
 
          System.out.println("-------------->Round: " + round + "<--------------");
          if (weapon != 0) System.out.println("Your weapon: " + weapon + " of DIAMONDS");
 
-         Card face1 = deck.remove(0);
-         Card face2 = deck.remove(0);
-         Card face3 = deck.remove(0);
-         Card face4 = deck.remove(0);
+         gameRoom(deck);
+         printRoom();
 
-         System.out.println(room(face1, face2, face3, face4));
+         if (!skipFlag) {
+            System.out.print("Skip this room? (Y/N): ");
 
-         String skipConfirm = "";
+            if (sc.next().equalsIgnoreCase("Y")) {
 
-         if (!skipFlag){
-            System.out.println("--> Do you wish to skip this room? Y/N");
+               for (Card c : roomCards) {
+                  if (c != null) deck.add(c);
+               }
 
-            skipConfirm = sc.next();
-
-            if (skipConfirm.equalsIgnoreCase("y")) {
-               deck.add(face1);
-               deck.add(face2);
-               deck.add(face3);
-               deck.add(face4);
-
+               roomCards.clear();
                skipFlag = true;
                round++;
                continue;
             }
-            
          }
 
-         String cmd = "";
-
-         for (int i=0; i<3; i++) {
-            int move = 1 +i;
-
+         for (int i=1; i<=3; i++) {
             System.out.println("YOUR HEALTH: " + health);
-            System.out.println("Move " + move + " out of 3");
+            System.out.println("Move " + i + " out of 3");
 
-            cmd = sc.next();
+            int choice = Integer.parseInt(sc.next()) - 1;
 
-            switch (cmd) {
-               case "1":
-                  gameLogic(face1, getCardSuit(face1), face1.getRank().getValue());
-                  break;
-               case "2":
-                  gameLogic(face2, getCardSuit(face2), face2.getRank().getValue());
-                  break;
-               case "3":
-                  gameLogic(face3, getCardSuit(face3), face3.getRank().getValue());
-                  break;
-               case "4":
-                  gameLogic(face4, getCardSuit(face4), face4.getRank().getValue());
-                  break;
+            if (choice < 0 || choice >= 4 || roomCards.get(choice) == null) {
+               System.out.println("##  TRY AGAIN  ##");
+               i--;
+               continue;
             }
+
+            Card chosen = roomCards.get(choice);
+            roomCards.set(choice, null);
+            gameLogic(chosen);
+
+            if (health <= 0) break;
          }
 
          skipFlag = false;
