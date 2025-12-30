@@ -58,7 +58,6 @@ public class Scoundrel {
             }
             else {
                health -= weaponSlain(value);
-               System.out.println("THIS RAN");
             }
          }
       }
@@ -84,8 +83,11 @@ public class Scoundrel {
       // }
       short round = 1;
 
+      boolean skipFlag = false;
+
       while (!deck.isEmpty()) {
-         System.out.println("Round: " + round);
+
+         System.out.println("-------------->Round: " + round + "<--------------");
          if (weapon != 0) System.out.println("Your weapon: " + weapon + " of DIAMONDS");
 
          Card face1 = deck.remove(0);
@@ -95,12 +97,36 @@ public class Scoundrel {
 
          System.out.println(room(face1, face2, face3, face4));
 
+         String skipConfirm = "";
+
+         if (!skipFlag){
+            System.out.println("--> Do you wish to skip this room? Y/N");
+
+            skipConfirm = sc.next();
+
+            if (skipConfirm.equalsIgnoreCase("y")) {
+               deck.add(face1);
+               deck.add(face2);
+               deck.add(face3);
+               deck.add(face4);
+
+               skipFlag = true;
+               round++;
+               continue;
+            }
+            
+         }
+
          String cmd = "";
+
          for (int i=0; i<3; i++) {
             int move = 1 +i;
+
             System.out.println("YOUR HEALTH: " + health);
             System.out.println("Move " + move + " out of 3");
+
             cmd = sc.next();
+
             switch (cmd) {
                case "1":
                   gameLogic(face1, getCardSuit(face1), face1.getRank().getValue());
@@ -117,6 +143,7 @@ public class Scoundrel {
             }
          }
 
+         skipFlag = false;
          round++;
       }
 
