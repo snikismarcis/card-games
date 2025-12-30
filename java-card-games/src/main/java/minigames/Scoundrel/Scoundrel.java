@@ -5,7 +5,9 @@ import java.util.Scanner;
 
 public class Scoundrel {
    private static int health = 20;
-   private static Card weapon;
+   private static int weapon = 0;
+   private static int weaponMonster = 0;
+   private static boolean weaponFlag = false;
 
    private static ArrayList<Card> newScoundrelDeck() {
       ArrayList<Card> deck = Card.createShuffledDeck();
@@ -35,18 +37,40 @@ public class Scoundrel {
       return card.getSuit().toString();
    }
 
+   private static int weaponSlain(int v) {
+      if (v > weaponMonster) return v;
+      else return v-weapon;
+   }
+
    private static void gameLogic(Card card, String suit, int value) {
       if (suit == "SPADES" || suit == "CLUBS") {
-         health = health - value;
-         System.out.println(health);
+         if (weapon == 0) {
+            health = health - value;
+         }
+         else {
+            if (weaponFlag != true) {
+               int damageCalc = value - weapon;
+
+               health = (damageCalc > 0) ? health - damageCalc : health;
+
+               weaponMonster = value;
+               weaponFlag = true;
+            }
+            else {
+               health -= weaponSlain(value);
+               System.out.println("THIS RAN");
+            }
+         }
       }
+
       if (suit == "HEARTS") {
          health = health + value;
          System.out.println(health);
       }
       if (suit == "DIAMONDS") {
-         weapon = card;
-         System.out.println(weapon.getSuit().toString());
+         weapon = value;
+         weaponFlag = false;
+         System.out.println("New weapon: " + weapon + " of DIAMONDS");
       }
    }
 
@@ -62,6 +86,7 @@ public class Scoundrel {
 
       while (!deck.isEmpty()) {
          System.out.println("Round: " + round);
+         if (weapon != 0) System.out.println("Your weapon: " + weapon + " of DIAMONDS");
 
          Card face1 = deck.remove(0);
          Card face2 = deck.remove(0);
@@ -71,21 +96,25 @@ public class Scoundrel {
          System.out.println(room(face1, face2, face3, face4));
 
          String cmd = "";
-         cmd = sc.next();
-
-         switch (cmd) {
-            case "1":
-               gameLogic(face1, getCardSuit(face1), face1.getRank().getValue());
-               break;
-            case "2":
-               // card2
-               break;
-            case "3":
-               // card3
-               break;
-            case "4":
-               // card4
-               break;
+         for (int i=0; i<3; i++) {
+            int move = 1 +i;
+            System.out.println("YOUR HEALTH: " + health);
+            System.out.println("Move " + move + " out of 3");
+            cmd = sc.next();
+            switch (cmd) {
+               case "1":
+                  gameLogic(face1, getCardSuit(face1), face1.getRank().getValue());
+                  break;
+               case "2":
+                  gameLogic(face2, getCardSuit(face2), face2.getRank().getValue());
+                  break;
+               case "3":
+                  gameLogic(face3, getCardSuit(face3), face3.getRank().getValue());
+                  break;
+               case "4":
+                  gameLogic(face4, getCardSuit(face4), face4.getRank().getValue());
+                  break;
+            }
          }
 
          round++;
